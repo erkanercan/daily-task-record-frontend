@@ -1,11 +1,15 @@
 import Layout from "@/components/layout";
 import "@styles/globals.scss";
 import type { AppProps } from "next/app";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <Layout>
-      <Component {...pageProps} />
-    </Layout>
+    <DndProvider backend={HTML5Backend}>
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
+    </DndProvider>
   );
 }

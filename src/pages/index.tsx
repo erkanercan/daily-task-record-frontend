@@ -1,5 +1,6 @@
 import { TaskCard } from "@/components";
 import TaskList from "@/components/task-list";
+import { useDrag } from "react-dnd";
 
 export default function Home() {
   return (
@@ -17,7 +18,7 @@ export default function Home() {
       </TaskCard> */}
       <TaskList>
         <TaskList.Item itemName="Backlog" itemColor="#ACADF9">
-          <TaskCard>
+          <TaskCard id="1">
             <TaskCard.Header
               img="/bill.png"
               name="Bill Gates"
@@ -30,7 +31,7 @@ export default function Home() {
           </TaskCard>
         </TaskList.Item>
         <TaskList.Item itemName="In Progress" itemColor="#E26E46">
-          <TaskCard>
+          <TaskCard id="2">
             <TaskCard.Header
               img="/bill.png"
               name="Bill Gates"
@@ -43,7 +44,7 @@ export default function Home() {
           </TaskCard>
         </TaskList.Item>
         <TaskList.Item itemName="Done" itemColor="#56B969">
-          <TaskCard>
+          <TaskCard id="3">
             <TaskCard.Header
               img="/bill.png"
               name="Bill Gates"

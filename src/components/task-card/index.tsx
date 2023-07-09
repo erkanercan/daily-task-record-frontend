@@ -2,18 +2,46 @@ import { PropsWithChildren } from "react";
 import styles from "./task-card.module.scss";
 import Image from "next/image";
 import cx from "classnames";
+import { useDrag } from "react-dnd";
 
 type TaskType = "Bug" | "Feature" | "Refactor";
 
-const TaskCard: React.FC<PropsWithChildren> & {
+interface TaskCardProps extends PropsWithChildren {
+  id: string; // Unique identifier for the TaskCard
+}
+
+const TaskCard: React.FC<TaskCardProps> & {
   Header: React.FC<{ img: string; name: string; title: string }>;
   Body: React.FC<{ taskText: string }>;
   Footer: React.FC<
     PropsWithChildren<{ children: React.ReactElement<typeof TaskTag> }>
   >;
   Tag: React.FC<{ type: TaskType }>;
-} = ({ children }) => {
-  return <div className={styles.card}>{children}</div>;
+} = ({ id, children }) => {
+  const [{ isDragging }, drag] = useDrag(() => ({
+    type: "BOX",
+    item: { id, children },
+    end: (item, monitor) => {
+      const dropResult = monitor.getDropResult();
+      console.log({ item, dropResult });
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+      handlerId: monitor.getHandlerId(),
+    }),
+  }));
+  return (
+    <div
+      ref={drag}
+      style={{
+        opacity: isDragging ? 0.5 : 1,
+        transform: "translate(0, 0)",
+      }}
+      className={styles.card}
+    >
+      {children}
+    </div>
+  );
 };
 
 const TaskHeader: React.FC<{ img: string; name: string; title: string }> = ({
