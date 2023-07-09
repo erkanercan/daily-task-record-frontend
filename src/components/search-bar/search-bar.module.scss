@@ -1,0 +1,23 @@
+@import "variables";
+.container {
+  display: inline-flex;
+  padding: 12px 16px;
+  border: 1px solid $border;
+  border-radius: $border-radius-base;
+  max-height: 45px;
+  width: 279px;
+  align-items: center;
+  justify-content: space-between;
+  & > input {
+    width: 100%;
+    // Remove the outline on focus
+    &:focus-within {
+      outline: none;
+    }
+
+    &::placeholder {
+      color: $text-secondary;
+      font-weight: 400;
+    }
+  }
+}
