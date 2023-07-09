@@ -1,0 +1,39 @@
+@import "reset";
+@import "variables";
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("./fonts/sf-pro-400.ttf");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("./fonts/sf-pro-500.ttf");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("./fonts/sf-pro-600.ttf");
+  font-weight: 600;
+  font-style: normal;
+}
+
+html,
+body {
+  font-family: "SF Pro", sans-serif;
+  color: $common-black;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+#__next {
+  background-color: $common-white;
+}
+
+body {
+  overflow-x: hidden;
+}

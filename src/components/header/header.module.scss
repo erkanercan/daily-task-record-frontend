@@ -1,0 +1,29 @@
+@import "variables";
+.container {
+  width: 1292px;
+  height: 84px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 16px;
+  box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.1);
+
+  &__leftContainer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.datePickerButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px;
+  width: 144px;
+  height: 44px;
+  border: 1px solid $border;
+  border-radius: $border-radius-base;
+  font-weight: 600;
+}
