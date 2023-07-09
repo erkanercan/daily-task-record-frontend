@@ -1,0 +1,22 @@
+@import "reset";
+@import "variables";
+
+@font-face {
+  font-family: "SF Pro";
+  src: url("./fonts/sf-pro.ttf");
+}
+
+html,
+body {
+  font-family: "SF Pro", sans-serif;
+  color: $common-black;
+  font-size: 14px;
+}
+
+#__next {
+  background-color: $common-white;
+}
+
+body {
+  overflow-x: hidden;
+}
