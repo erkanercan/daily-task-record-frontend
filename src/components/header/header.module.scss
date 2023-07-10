@@ -13,6 +13,18 @@
     display: flex;
     align-items: center;
     gap: 16px;
+
+    &__taskInputGroupContainer {
+      margin-top: 21px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+
+      &__submitButton {
+        width: 96px;
+        align-self: flex-end;
+      }
+    }
   }
 }
 

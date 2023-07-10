@@ -1,0 +1,78 @@
+@import "variables";
+
+.trigger {
+  height: 40px;
+  width: 178px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid $border;
+  border-radius: $border-radius-base;
+  color: $text-secondary;
+  padding: 12px 12px 12px 16px;
+}
+
+.selected {
+  color: $common-black;
+}
+
+.content {
+  padding: 12px;
+  width: 178px;
+  background-color: $common-white;
+  border: 1px solid $border;
+  border-radius: $border-radius-base;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  user-select: none;
+}
+
+.itemContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.box {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.red {
+  background-color: #f32e2e;
+}
+
+.pink {
+  background-color: #e034cf;
+}
+
+.green {
+  background-color: #56b969;
+}
+
+.input {
+  display: flex;
+  height: 40px;
+  width: 100%;
+  border: 1px solid $border;
+  border-radius: $border-radius-base;
+  padding: 12px;
+  &:focus-within {
+    outline: none;
+  }
+  &::placeholder {
+    color: $text-secondary;
+  }
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
