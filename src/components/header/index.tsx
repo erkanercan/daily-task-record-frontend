@@ -1,8 +1,7 @@
-import Image from "next/image";
 import PrimaryButton from "../primary-button";
 import SearchBar from "../search-bar";
 import styles from "./header.module.scss";
-import { forwardRef, useState } from "react";
+import { useState } from "react";
 import DatePicker from "react-datepicker";
 import {
   Modal,
@@ -21,38 +20,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { getAvatar } from "@/utils/avatar";
 import { useTaskStore } from "@/stores/task-store";
-
-interface CustomInputProps {
-  value: string;
-  onClick: () => void;
-}
-
-const CustomInput = forwardRef<HTMLButtonElement, CustomInputProps>(
-  ({ value, onClick }, ref) => {
-    // Check if the date is today
-    const isToday = (date: Date) => {
-      const today = new Date();
-      return (
-        date.getDate() === today.getDate() &&
-        date.getMonth() === today.getMonth() &&
-        date.getFullYear === today.getFullYear
-      );
-    };
-    return (
-      <button className={styles.datePickerButton} onClick={onClick} ref={ref}>
-        {isToday(new Date(value)) ? "Today" : value}
-        <Image
-          alt="Open calendar"
-          src="/icons/expand.svg"
-          width={20}
-          height={20}
-        />
-      </button>
-    );
-  }
-);
-
-CustomInput.displayName = "CustomInput";
+import { CustomInput } from "./CustomInput";
 
 const Header = () => {
   const { selectedDate, setSelectedDate } = useDateStore();
@@ -127,7 +95,7 @@ const Header = () => {
         }
         return res.json();
       });
-      setUser(data);
+      setUser(data.data.user);
       return data;
     },
     onError: (error: any) => {
@@ -168,7 +136,12 @@ const Header = () => {
         }
         return res.json();
       });
+      toast("Account created successfully, you can now login", {
+        type: "success",
+      });
       setUser(data.user);
+      setOpen(false);
+      return data;
     },
   });
 
@@ -387,7 +360,7 @@ const Header = () => {
                 </ModalContent>
               </ModalPortal>
             </Modal>
-            <Modal>
+            <Modal open={open} onOpenChange={setOpen}>
               <ModalTrigger>
                 <PrimaryButton>Register</PrimaryButton>
               </ModalTrigger>
