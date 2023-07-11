@@ -1,25 +1,29 @@
 import { TaskCard } from "@/components";
 import TaskList from "@/components/task-list";
 import { useDateStore } from "@/stores/date-store";
+import { useUserStore } from "@/stores/user-store";
 import { useQuery } from "@tanstack/react-query";
 
 export default function Home() {
   const { selectedDate } = useDateStore();
+  const { user } = useUserStore();
   const { data: tasks } = useQuery({
     queryKey: ["tasks", selectedDate],
     queryFn: async () => {
       const baseURL = process.env.NEXT_PUBLIC_API_URL;
       if (!baseURL) throw new Error("No API URL found");
-      const data = await fetch(`${baseURL}/tasks?createdAt=${selectedDate}`)
+      const data = await fetch(`${baseURL}/tasks?createdAt=${selectedDate}`, {
+        credentials: "include",
+      })
         .then((res) => res.json())
         .then((data) => {
           return data.data.tasks;
         });
-
-      console.log(data);
       return data;
     },
-    enabled: !!selectedDate,
+    enabled: !!selectedDate && !!user,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 
   return (

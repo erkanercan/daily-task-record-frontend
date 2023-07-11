@@ -16,6 +16,9 @@ import {
 import "react-datepicker/dist/react-datepicker.css";
 import { useDateStore } from "@/stores/date-store";
 import TaskInput from "../task-input";
+import { useUserStore } from "@/stores/user-store";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 interface CustomInputProps {
   value: string;
@@ -51,6 +54,42 @@ CustomInput.displayName = "CustomInput";
 
 const Header = () => {
   const { selectedDate, setSelectedDate } = useDateStore();
+  const { user, setUser } = useUserStore();
+  const [loginForm, setLoginForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const { mutateAsync: login, isLoading: isLoginLoading } = useMutation({
+    mutationKey: ["login"],
+    mutationFn: async () => {
+      if (!loginForm.email || !loginForm.password) {
+        toast("Please enter your email and password", { type: "error" });
+        return;
+      }
+      const baseURL = process.env.NEXT_PUBLIC_API_URL;
+      if (!baseURL) throw new Error("No API URL found");
+      const data = await fetch(`${baseURL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(loginForm),
+      }).then((res) => {
+        if (res.status === 400) {
+          toast("Invalid email or password", { type: "error" });
+          return;
+        }
+        return res.json();
+      });
+      console.log(data);
+      setUser(data);
+    },
+    onError: (error: any) => {
+      toast(error.message, { type: "error" });
+    },
+  });
 
   return (
     <div className={styles.container}>
@@ -76,11 +115,7 @@ const Header = () => {
                 <TaskInput />
                 <TaskInput />
                 <TaskInput />
-                <PrimaryButton
-                  className={
-                    styles.container__leftContainer__taskInputGroupContainer__submitButton
-                  }
-                >
+                <PrimaryButton className={styles.submitButton}>
                   Submit
                 </PrimaryButton>
               </div>
@@ -99,7 +134,97 @@ const Header = () => {
           customInput={<CustomInput value="" onClick={() => {}} />}
         />
       </div>
-      <SearchBar />
+      <div className={styles.container__rightContainer}>
+        {!user && (
+          <div
+            className={styles.container__rightContainer__buttonGroupContainer}
+          >
+            <Modal>
+              <ModalTrigger>
+                <PrimaryButton>Login</PrimaryButton>
+              </ModalTrigger>
+              <ModalPortal>
+                <ModalOverlay />
+                <ModalContent>
+                  <ModalTitle>Login</ModalTitle>
+                  <div
+                    className={
+                      styles.container__rightContainer__loginInputGroupContainer
+                    }
+                  >
+                    <input
+                      className={styles.container__rightContainer__loginInput}
+                      placeholder="Email"
+                      onChange={(e) =>
+                        setLoginForm({
+                          ...loginForm,
+                          email: e.target.value,
+                        })
+                      }
+                    />
+                    <input
+                      className={styles.container__rightContainer__loginInput}
+                      placeholder="Password"
+                      onChange={(e) =>
+                        setLoginForm({
+                          ...loginForm,
+                          password: e.target.value,
+                        })
+                      }
+                    />
+                    <PrimaryButton
+                      className={styles.submitButton}
+                      onClick={() => {
+                        login();
+                      }}
+                    >
+                      Submit
+                    </PrimaryButton>
+                  </div>
+                </ModalContent>
+              </ModalPortal>
+            </Modal>
+            <Modal>
+              <ModalTrigger>
+                <PrimaryButton>Register</PrimaryButton>
+              </ModalTrigger>
+              <ModalPortal>
+                <ModalOverlay />
+                <ModalContent>
+                  <ModalTitle>Register</ModalTitle>
+                  <div
+                    className={
+                      styles.container__rightContainer__loginInputGroupContainer
+                    }
+                  >
+                    <input
+                      className={styles.container__rightContainer__loginInput}
+                      placeholder="Name"
+                    />
+                    <input
+                      className={styles.container__rightContainer__loginInput}
+                      placeholder="Title"
+                    />
+                    <input
+                      className={styles.container__rightContainer__loginInput}
+                      placeholder="Email"
+                    />
+                    <input
+                      className={styles.container__rightContainer__loginInput}
+                      placeholder="Password"
+                      type="password"
+                    />
+                    <PrimaryButton className={styles.submitButton}>
+                      Submit
+                    </PrimaryButton>
+                  </div>
+                </ModalContent>
+              </ModalPortal>
+            </Modal>
+          </div>
+        )}
+        <SearchBar />
+      </div>
     </div>
   );
 };
