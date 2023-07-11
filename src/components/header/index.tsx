@@ -17,8 +17,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useDateStore } from "@/stores/date-store";
 import TaskInput from "../task-input";
 import { useUserStore } from "@/stores/user-store";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { createAvatar } from "@dicebear/core";
+import { lorelei } from "@dicebear/collection";
+import { getAvatar } from "@/utils/avatar";
 
 interface CustomInputProps {
   value: string;
@@ -59,6 +62,13 @@ const Header = () => {
     email: "",
     password: "",
   });
+  const [registerForm, setRegisterForm] = useState({
+    name: "",
+    title: "",
+    email: "",
+    password: "",
+    passwordConfirm: "",
+  });
 
   const { mutateAsync: login, isLoading: isLoginLoading } = useMutation({
     mutationKey: ["login"],
@@ -83,11 +93,47 @@ const Header = () => {
         }
         return res.json();
       });
-      console.log(data);
       setUser(data);
     },
     onError: (error: any) => {
       toast(error.message, { type: "error" });
+    },
+  });
+
+  const { mutateAsync: register, isLoading: isRegisterLoading } = useMutation({
+    mutationKey: ["register"],
+    mutationFn: async () => {
+      if (
+        !registerForm.name ||
+        !registerForm.title ||
+        !registerForm.email ||
+        !registerForm.password ||
+        !registerForm.passwordConfirm
+      ) {
+        toast("Please fill out all fields", { type: "error" });
+        return;
+      }
+      if (registerForm.password !== registerForm.passwordConfirm) {
+        toast("Passwords do not match", { type: "error" });
+        return;
+      }
+      const baseURL = process.env.NEXT_PUBLIC_API_URL;
+      if (!baseURL) throw new Error("No API URL found");
+      const data = await fetch(`${baseURL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(registerForm),
+      }).then((res) => {
+        if (res.status === 409) {
+          toast("Email already exists", { type: "error" });
+          return;
+        }
+        return res.json();
+      });
+      setUser(data.user);
     },
   });
 
@@ -135,7 +181,7 @@ const Header = () => {
         />
       </div>
       <div className={styles.container__rightContainer}>
-        {!user && (
+        {!user ? (
           <div
             className={styles.container__rightContainer__buttonGroupContainer}
           >
@@ -165,6 +211,7 @@ const Header = () => {
                     <input
                       className={styles.container__rightContainer__loginInput}
                       placeholder="Password"
+                      type="password"
                       onChange={(e) =>
                         setLoginForm({
                           ...loginForm,
@@ -177,6 +224,7 @@ const Header = () => {
                       onClick={() => {
                         login();
                       }}
+                      disabled={isLoginLoading}
                     >
                       Submit
                     </PrimaryButton>
@@ -200,27 +248,78 @@ const Header = () => {
                     <input
                       className={styles.container__rightContainer__loginInput}
                       placeholder="Name"
+                      onChange={(e) =>
+                        setRegisterForm({
+                          ...registerForm,
+                          name: e.target.value,
+                        })
+                      }
                     />
                     <input
                       className={styles.container__rightContainer__loginInput}
                       placeholder="Title"
+                      onChange={(e) =>
+                        setRegisterForm({
+                          ...registerForm,
+                          title: e.target.value,
+                        })
+                      }
                     />
                     <input
                       className={styles.container__rightContainer__loginInput}
                       placeholder="Email"
+                      onChange={(e) =>
+                        setRegisterForm({
+                          ...registerForm,
+                          email: e.target.value,
+                        })
+                      }
                     />
                     <input
                       className={styles.container__rightContainer__loginInput}
                       placeholder="Password"
                       type="password"
+                      onChange={(e) =>
+                        setRegisterForm({
+                          ...registerForm,
+                          password: e.target.value,
+                        })
+                      }
                     />
-                    <PrimaryButton className={styles.submitButton}>
+                    <input
+                      className={styles.container__rightContainer__loginInput}
+                      placeholder="Password Confirmation"
+                      type="password"
+                      disabled={isRegisterLoading}
+                      onChange={(e) =>
+                        setRegisterForm({
+                          ...registerForm,
+                          passwordConfirm: e.target.value,
+                        })
+                      }
+                    />
+                    <PrimaryButton
+                      onClick={() => {
+                        register();
+                      }}
+                      className={styles.submitButton}
+                    >
                       Submit
                     </PrimaryButton>
                   </div>
                 </ModalContent>
               </ModalPortal>
             </Modal>
+          </div>
+        ) : (
+          <div
+            className={styles.container__rightContainer__userAvatarContainer}
+          >
+            {getAvatar(user.email)}
+            <div>
+              <p>{user.name}</p>
+              <p>{user.title}</p>
+            </div>
           </div>
         )}
         <SearchBar />

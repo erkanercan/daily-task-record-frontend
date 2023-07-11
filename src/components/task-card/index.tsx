@@ -3,20 +3,21 @@ import styles from "./task-card.module.scss";
 import Image from "next/image";
 import cx from "classnames";
 import { useDrag } from "react-dnd";
-
-type TaskType = "Bug" | "Feature" | "Refactor";
+import { Category } from "@/types/task";
+import { getAvatar } from "@/utils/avatar";
+import { useUserStore } from "@/stores/user-store";
 
 interface TaskCardProps extends PropsWithChildren {
   id: string; // Unique identifier for the TaskCard
 }
 
 const TaskCard: React.FC<TaskCardProps> & {
-  Header: React.FC<{ img: string; name: string; title: string }>;
+  Header: React.FC<{ name: string; title: string }>;
   Body: React.FC<{ taskText: string }>;
   Footer: React.FC<
     PropsWithChildren<{ children: React.ReactElement<typeof TaskTag> }>
   >;
-  Tag: React.FC<{ type: TaskType }>;
+  Tag: React.FC<{ type: Category }>;
 } = ({ id, children }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: "BOX",
@@ -44,20 +45,14 @@ const TaskCard: React.FC<TaskCardProps> & {
   );
 };
 
-const TaskHeader: React.FC<{ img: string; name: string; title: string }> = ({
-  img,
+const TaskHeader: React.FC<{ name: string; title: string }> = ({
   name,
   title,
 }) => {
+  const { user } = useUserStore();
   return (
     <div className={styles.card__header}>
-      <Image
-        className={styles.card__header__avatar}
-        src={img}
-        alt="Picture of the author"
-        width={36}
-        height={36}
-      />
+      {user && getAvatar(user.email)}
       <div className={styles.card__header__titleGroup}>
         <div className={styles.card__header__titleGroup__name}>{name}</div>
         <div className={styles.card__header__titleGroup__title}>{title}</div>
@@ -76,13 +71,12 @@ const TaskFooter: React.FC<
   return <div className={styles.card__footer}>{children}</div>;
 };
 
-const TaskTag: React.FC<{ type: TaskType }> = ({ type }) => {
-  const tagBoxClassName =
-    styles[`card__footer__tag__box--${type.toLowerCase()}`];
+const TaskTag: React.FC<{ type: Category }> = ({ type }) => {
+  const tagBoxClassName = styles[`card__footer__tag__box--${type}`];
   return (
     <div className={styles.card__footer__tag}>
       <div className={cx(styles.card__footer__tag__box, tagBoxClassName)} />
-      <div>{type}</div>
+      <div>{type.charAt(0).toUpperCase() + type.slice(1)}</div>
     </div>
   );
 };
