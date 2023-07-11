@@ -16,7 +16,7 @@ export const ModalPortal: React.FC<
 
 export const ModalOverlay: React.FC<
   React.ComponentProps<typeof Dialog.Overlay>
-> = ({ children, ...props }) => (
+> = ({ ...props }) => (
   <Dialog.Overlay className={cx(styles.overlay, props.className)} {...props} />
 );
 

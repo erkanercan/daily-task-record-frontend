@@ -19,9 +19,8 @@ import TaskInput from "../task-input";
 import { useUserStore } from "@/stores/user-store";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import { createAvatar } from "@dicebear/core";
-import { lorelei } from "@dicebear/collection";
 import { getAvatar } from "@/utils/avatar";
+import { useTaskStore } from "@/stores/task-store";
 
 interface CustomInputProps {
   value: string;
@@ -58,6 +57,9 @@ CustomInput.displayName = "CustomInput";
 const Header = () => {
   const { selectedDate, setSelectedDate } = useDateStore();
   const { user, setUser } = useUserStore();
+  const { tasks, initialTasksLoaded, getTasksByUserId, setInitialTasksLoaded } =
+    useTaskStore();
+  const [open, setOpen] = useState(false);
   const [loginForm, setLoginForm] = useState({
     email: "",
     password: "",
@@ -68,6 +70,38 @@ const Header = () => {
     email: "",
     password: "",
     passwordConfirm: "",
+  });
+  const [taskFormData, setTaskFormData] = useState(
+    Array(3).fill({
+      text: "",
+      category: "",
+      taskDay: selectedDate,
+    })
+  );
+
+  const { data: userTasks } = useQuery({
+    queryKey: [
+      "tasks",
+      user,
+      user?._id,
+      selectedDate,
+      initialTasksLoaded,
+      tasks,
+    ],
+    queryFn: async () => {
+      if (!user?._id) return null;
+      const tasks = getTasksByUserId(user._id);
+      const emptyTasks = Array(3 - tasks.length).fill({
+        text: "",
+        category: "",
+        taskDay: selectedDate,
+      });
+      console.log([...tasks, ...emptyTasks]);
+      setTaskFormData([...tasks, ...emptyTasks]);
+      return [...tasks, ...emptyTasks];
+    },
+    enabled: !!user?._id && initialTasksLoaded,
+    refetchOnWindowFocus: false,
   });
 
   const { mutateAsync: login, isLoading: isLoginLoading } = useMutation({
@@ -94,6 +128,7 @@ const Header = () => {
         return res.json();
       });
       setUser(data);
+      return data;
     },
     onError: (error: any) => {
       toast(error.message, { type: "error" });
@@ -137,12 +172,61 @@ const Header = () => {
     },
   });
 
+  const { data: avatar } = useQuery({
+    queryKey: ["userAvatar", user, user?.email],
+    queryFn: async () => {
+      if (!user?.email) return null;
+      return getAvatar(user.email);
+    },
+    enabled: !!user && !!user.email,
+  });
+
+  const { mutateAsync: addTasks } = useMutation({
+    mutationKey: ["addTasks"],
+    mutationFn: async (tasksToCreate: any[]) => {
+      if (!user?._id) return;
+      const baseURL = process.env.NEXT_PUBLIC_API_URL;
+      if (!baseURL) throw new Error("No API URL found");
+      tasksToCreate.forEach(async (task) => {
+        await fetch(`${baseURL}/tasks`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(task),
+        });
+      });
+    },
+  });
+
+  const { mutateAsync: updateTasks } = useMutation({
+    mutationKey: ["updateTasks"],
+    mutationFn: async (tasksToUpdate: any[]) => {
+      if (!user?._id) return;
+      const baseURL = process.env.NEXT_PUBLIC_API_URL;
+      if (!baseURL) throw new Error("No API URL found");
+      tasksToUpdate.forEach(async (task) => {
+        await fetch(`${baseURL}/tasks/${task._id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(task),
+        });
+      });
+    },
+  });
+
   return (
     <div className={styles.container}>
       <div className={styles.container__leftContainer}>
-        <Modal>
+        <Modal open={open} onOpenChange={setOpen}>
           <ModalTrigger>
-            <PrimaryButton>Report Your Daily Tasks</PrimaryButton>
+            <PrimaryButton disabled={!user}>
+              Report Your Daily Tasks
+            </PrimaryButton>
           </ModalTrigger>
           <ModalPortal>
             <ModalOverlay />
@@ -158,10 +242,81 @@ const Header = () => {
                   styles.container__leftContainer__taskInputGroupContainer
                 }
               >
-                <TaskInput />
-                <TaskInput />
-                <TaskInput />
-                <PrimaryButton className={styles.submitButton}>
+                {userTasks?.map((task, index) => (
+                  <TaskInput
+                    key={index}
+                    index={index}
+                    initialData={task}
+                    onInputChange={(index, value) => {
+                      // Update task form data
+                      const newTaskFormData = [...taskFormData];
+                      newTaskFormData[index] = value;
+                      setTaskFormData(newTaskFormData);
+                    }}
+                  />
+                ))}
+                <PrimaryButton
+                  className={styles.submitButton}
+                  onClick={async () => {
+                    const filteredTaskFormData = taskFormData.filter(
+                      (task) => task.text || task.category
+                    );
+
+                    // Find the tasks that really changed
+                    const tasksThatChanged = filteredTaskFormData.filter(
+                      (task, index) => {
+                        const initialTask = userTasks?.[index];
+                        if (!initialTask) return true;
+                        return (
+                          task.text !== initialTask.text ||
+                          task.category !== initialTask.category
+                        );
+                      }
+                    );
+                    // add taskday to each task
+                    tasksThatChanged.forEach((task) => {
+                      task.taskDay = selectedDate;
+                    });
+
+                    // Check if all tasks have text and category
+                    if (
+                      tasksThatChanged.some(
+                        (task) => !task.text || !task.category
+                      )
+                    ) {
+                      // Show error, for example if user filled a category but not text or vice versa
+                      toast(
+                        "Please fill out empty areas, for example if you filled out a category, please fill out the text area as well",
+                        { type: "error" }
+                      );
+                      return;
+                    }
+                    // Check if tasks have _id, if they do, update, if not, create
+                    const tasksToCreate = tasksThatChanged.filter(
+                      (task) => !task._id
+                    );
+                    const tasksToUpdate = tasksThatChanged.filter(
+                      (task) => !!task._id
+                    );
+                    // Create tasks
+                    if (tasksToCreate.length > 0) {
+                      await addTasks(tasksToCreate);
+                    }
+                    // Update tasks
+                    if (tasksToUpdate.length > 0) {
+                      await updateTasks(tasksToUpdate);
+                    }
+
+                    toast(
+                      `Tasks for ${selectedDate.toLocaleDateString()} saved`,
+                      {
+                        type: "success",
+                      }
+                    );
+                    setInitialTasksLoaded(false);
+                    setOpen(false);
+                  }}
+                >
                   Submit
                 </PrimaryButton>
               </div>
@@ -315,7 +470,7 @@ const Header = () => {
           <div
             className={styles.container__rightContainer__userAvatarContainer}
           >
-            {getAvatar(user.email)}
+            {avatar}
             <div>
               <p>{user.name}</p>
               <p>{user.title}</p>

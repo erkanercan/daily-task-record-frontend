@@ -6,6 +6,10 @@ interface DateState {
 }
 
 export const useDateStore = create<DateState>()((set) => ({
-  selectedDate: new Date(),
+  selectedDate: new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    new Date().getDate()
+  ),
   setSelectedDate: (date: Date) => set({ selectedDate: date }),
 }));

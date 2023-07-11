@@ -29,4 +29,5 @@ export interface Task {
   text: string;
   category: Category;
   status: Status;
+  taskDay: Date;
 }
