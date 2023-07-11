@@ -1,12 +1,47 @@
 import Image from "next/image";
+import { useState, useEffect } from "react";
 import styles from "./search-bar.module.scss";
+import { useSearchStore } from "@/stores/search-store";
+import { useQuery } from "@tanstack/react-query";
 
 const SearchBar = () => {
-  // This component will have a input
-  // With one placeholder text and a search icon inside the input, spaced between them
+  const { search, setSearch } = useSearchStore();
+  const [inputValue, setInputValue] = useState(search);
+
+  const delay = 300;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+  };
+
+  const { data: searchQuery, isSuccess } = useQuery({
+    queryKey: ["search", inputValue],
+    queryFn: (): Promise<string> => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(inputValue);
+        }, delay);
+      });
+    },
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (isSuccess) {
+      console.log("searchQuery", searchQuery);
+      setSearch(searchQuery);
+    }
+  }, [searchQuery, setSearch, isSuccess]);
+
   return (
     <div className={styles.container}>
-      <input type="text" placeholder="Search Task" />
+      <input
+        type="text"
+        placeholder="Search Task"
+        value={inputValue}
+        onChange={handleInputChange}
+      />
       <div className={styles.searchIcon}>
         <Image
           src="/icons/search.svg"
